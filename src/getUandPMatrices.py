@@ -16,8 +16,8 @@ elementsList = getElementsList(elements)
 
 duplicatedNodes = getDuplicatedNodes(geometricNodes)
 auxiliaryMesh = generateAuxiliaryMesh(elementsList, duplicatedNodes, geometricNodes)
-sourcePoints = getSourcePoints(duplicatedNodes, geometricNodes, elementsList)
-# sourcePoints = auxiliaryMesh
+# sourcePoints = getSourcePoints(duplicatedNodes, geometricNodes, elementsList)
+sourcePoints = auxiliaryMesh
 
 dirac = [[1,0],[0,1]]
 
@@ -48,10 +48,9 @@ def getHandGMatrices(sourcePoints: list):
 
     # verificação de pontos fontes no contorno
     if sourcePoints == auxiliaryMesh:
-        print("check")
         HMatrix += np.identity(2 * len(sourcePoints)) * 1/2
 
-    integrationPoints, weights = gauss_legendre(12, 5)
+    integrationPoints, weights = gauss_legendre(20, 5)
     G = 0.5 # kN/m2
     poisson = 0
 
@@ -117,6 +116,7 @@ def getHandGMatrices(sourcePoints: list):
                     forceCPV[1,0] = (((-1 + 2 * poisson) * (sourceNormalVector[1] * radiusDotDiff[0] - sourceNormalVector[0] * radiusDotDiff[1])) / (4 * math.pi * (1 - poisson))) * (math.log(1 - sourcePointDimensionlessCoordinate) - math.log(1 + sourcePointDimensionlessCoordinate))
                     forceCPV[1,1] = (((-1 + 2 * poisson) * (sourceNormalVector[1] * radiusDotDiff[1] - sourceNormalVector[1] * radiusDotDiff[1])) / (4 * math.pi * (1 - poisson))) * (math.log(1 - sourcePointDimensionlessCoordinate) - math.log(1 + sourcePointDimensionlessCoordinate))
                     
+                # print("Pvpc: ", forceCPV)
                 displacementCPVContribution = np.dot(displacementCPV, fi_)  
                 forceCPVContribution = np.dot(forceCPV, fi_)
                                     
@@ -134,11 +134,15 @@ def getHandGMatrices(sourcePoints: list):
                 
                 U = np.zeros((2,2))
                 P = np.zeros((2,2))
+                _U = np.zeros((2,2))
+                _P = np.zeros((2,2))
 
                 for i in range(2):
                     for j in range(2):
-                        U[i,j] += (1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(radius) * dirac[i][j] + radiusDiff[i] * radiusDiff[j])
+                        # remover o termo final de U
+                        U[i,j] += (1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(radius) * dirac[i][j] + radiusDiff[i] * radiusDiff[j] - (0.5 * (7 - 8 * poisson)) * dirac[i][j])
                         P[i,j] += (-1 / (4 * math.pi * (1 - poisson) * radius)) * (DRDN * ((1 - 2 * poisson) * dirac[i][j] + 2 * radiusDiff[i] * radiusDiff[j]) + (1 - 2 * poisson) * (normalVector[i] * radiusDiff[j] - normalVector[j] * radiusDiff[i]))
+                        
                         
                         # contribuir com parcela de regularização
                         if sourcePointIsOnElement:                            
@@ -147,19 +151,26 @@ def getHandGMatrices(sourcePoints: list):
                             sourceTangentVector, sourceNormalVector, sourceJacobain = getPointProperties(auxiliaryDimensionlessPoints[nodeIndex], elementNodes, dimensionlessPoints)
                             radiusDotDiff = [sourceTangentVector[0] / sourceJacobain, sourceTangentVector[1] / sourceJacobain]
                             
-                            U[i,j] += (-1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(abs(radiusDot)) * dirac[i][j])
-                            P[i,j] += (1 / (4 * math.pi * (1 - poisson) * radiusDot)) * (1 - 2 * poisson) * (sourceNormalVector[i] * radiusDotDiff[j] - sourceNormalVector[j] * radiusDotDiff[i])
-                                
+                            _U[i,j] += (-1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(abs(radiusDot)) * dirac[i][j])
+                            _P[i,j] += (1 / (4 * math.pi * (1 - poisson) * radiusDot)) * (1 - 2 * poisson) * (sourceNormalVector[i] * radiusDotDiff[j] - sourceNormalVector[j] * radiusDotDiff[i])
+
                 fi = np.zeros((2, 2 * len(elementNodes))) 
+                _fi = np.zeros((2, 2 * len(elementNodes))) 
 
                 for en in range(len(elementNodes)):
                     shapeFunctionValueOnIP = getShapeFunctionValueOnNode(integrationPoints[ip], en, auxiliaryDimensionlessPoints)
                     
                     fi[0, 2 * en] = shapeFunctionValueOnIP
                     fi[1, 2 * en + 1] = shapeFunctionValueOnIP
+
+                    if sourcePointIsOnElement:
+                        shapeFunctionValueOnSource = getShapeFunctionValueOnNode(sourcePointDimensionlessCoordinate, en, auxiliaryDimensionlessPoints)
+                        
+                        _fi[0, 2 * en] = shapeFunctionValueOnSource
+                        _fi[1, 2 * en + 1] = shapeFunctionValueOnSource
                 
-                DH = DH + np.dot(P, fi) * jacobian * weights[ip]
-                DG = DG + np.dot(U, fi) * jacobian * weights[ip]
+                DH = DH + np.dot(P, fi) * jacobian * weights[ip] + np.dot(_P, _fi) * jacobian * weights[ip]
+                DG = DG + np.dot(U, fi) * jacobian * weights[ip] + np.dot(_U, _fi) * jacobian * weights[ip]
             
             # colocar DH e DG na matriz global
             for en in range(len(elementNodes)):
@@ -216,7 +227,63 @@ for i in range(len(prescribedU)):
     boundaryDisplacements[2 * index] = prescribedU[i][1][0]
     boundaryDisplacements[2 * index + 1] = prescribedU[i][1][1]
 
+print(boundaryDisplacements)
 IntHMatrix, IntGMatrix = getHandGMatrices(internalPoints)
 internalDisplacements = np.dot(IntGMatrix, boundaryForces) - np.dot(IntHMatrix, boundaryDisplacements)
 
-print(internalDisplacements)
+# def getInternalStress():
+#     HMatrix = np.zeros((2 * len(sourcePoints), len(auxiliaryMesh)))
+#     GMatrix = np.zeros((2 * len(sourcePoints), len(auxiliaryMesh)))
+
+#     integrationPoints, weights = gauss_legendre(12, 5)
+#     G = 0.5 # kN/m2
+#     poisson = 0
+
+#     for sp in range(len(sourcePoints)):
+#         for el in range(len(elementsList)):
+#             elementNodes = elementsList[el].getElementNodesRealCoordinates(geometricNodes)
+#             dimensionlessPoints = elementsList[el].getDimensionlessPointsBasedOnGeometricCoordinates()
+#             auxiliaryDimensionlessPoints = elementsList[el].getDimensionlessPointsBasedOnElementContinuity(duplicatedNodes)
+
+#             DH = np.zeros((2, 2 * len(elementNodes)))
+#             DG = np.zeros((2, 2 * len(elementNodes)))
+   
+#             for ip in range(len(integrationPoints)):           
+#                 integrationPointsRealCoordinates = getIntegrationPointCoordinates(integrationPoints[ip], elementNodes, dimensionlessPoints)
+
+#                 integrationPointRadius = getRadius(sourcePoints[sp], integrationPointsRealCoordinates)
+#                 radius = integrationPointRadius[1]
+#                 radiusDiff = [integrationPointRadius[0][0] / integrationPointRadius[1], integrationPointRadius[0][1] / integrationPointRadius[1]]
+
+#                 _, normalVector, jacobian = getPointProperties(ip, elementNodes, dimensionlessPoints)
+                
+#                 DRDN = radiusDiff[0] * normalVector[0] +  radiusDiff[1] * normalVector[1]
+                
+#                 D = np.zeros((4,2))
+#                 S = np.zeros((4,2))
+
+#                 for i in range(2):
+#                     for j in range(2):
+
+
+#                 fi = np.zeros((2, 2 * len(elementNodes))) 
+
+#                 for en in range(len(elementNodes)):
+#                     shapeFunctionValueOnIP = getShapeFunctionValueOnNode(integrationPoints[ip], en, auxiliaryDimensionlessPoints)
+                    
+#                     fi[0, 2 * en] = shapeFunctionValueOnIP
+#                     fi[1, 2 * en + 1] = shapeFunctionValueOnIP
+                
+#                 DH = DH + np.dot(P, fi) * jacobian * weights[ip]
+#                 DG = DG + np.dot(U, fi) * jacobian * weights[ip]
+            
+#             # colocar DH e DG na matriz global
+#             for en in range(len(elementNodes)):
+#                 for i in range(2):
+#                     HMatrix[2*sp][2 * elementsList[el].nodeList[en] + i] += DH[0][2 * en + i]
+#                     HMatrix[2*sp + 1][2 * elementsList[el].nodeList[en] + i] += DH[1][2 * en + i]
+
+#                     GMatrix[2*sp][2 * elementsList[el].nodeList[en] + i] += DG[0][2 * en + i]
+#                     GMatrix[2*sp + 1][2 * elementsList[el].nodeList[en] + i] += DG[1][2 * en + i]
+                                
+#     return HMatrix, GMatrix
