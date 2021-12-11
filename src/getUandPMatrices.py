@@ -11,7 +11,6 @@ from readInputFile import readInputFile
 from shapeFunctions import getShapeFunctionValueOnNode
 
 prescribedU, prescribedP, geometricNodes, _, elements = readInputFile("src/ex1_inputFile.txt")
-print(geometricNodes)
 
 elementsList = getElementsList(elements)
 
@@ -33,7 +32,7 @@ def getHandGMatrices():
     HMatrix = np.zeros((2 * len(sourcePoints), 2 * len(sourcePoints)))
     GMatrix = np.zeros((2 * len(sourcePoints), 2 * len(sourcePoints)))
 
-    integrationPoints, weights = gauss_legendre(30, 5)
+    integrationPoints, weights = gauss_legendre(12, 5)
     G = 0.5 # kN/m2
     poisson = 0
 
@@ -46,7 +45,7 @@ def getHandGMatrices():
             DH = np.zeros((2, 2 * len(elementNodes)))
             DG = np.zeros((2, 2 * len(elementNodes)))
                         
-            for ip in range(len(integrationPoints)):                
+            for ip in range(len(integrationPoints)):           
                 integrationPointsRealCoordinates = getIntegrationPointCoordinates(integrationPoints[ip], elementNodes, dimensionlessPoints)
 
                 integrationPointRadius = getRadius(sourcePoints[sp], integrationPointsRealCoordinates)
@@ -64,8 +63,7 @@ def getHandGMatrices():
                     for j in range(2):
                         U[i,j] = (1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(radius) * dirac[i][j] + radiusDiff[i] * radiusDiff[j])
                         P[i,j] = (-1 / (4 * math.pi * (1 - poisson) * radius)) * (DRDN * ((1 - 2 * poisson) * dirac[i][j] + 2 * radiusDiff[i] * radiusDiff[j]) + (1 - 2 * poisson) * (normalVector[i] * radiusDiff[j] - normalVector[j] * radiusDiff[i]))
-                
-                
+                                
                 fi = np.zeros((2, 2 * len(elementNodes))) 
 
                 for en in range(len(elementNodes)):
@@ -73,7 +71,7 @@ def getHandGMatrices():
                     
                     fi[0, 2 * en] = shapeFunctionValueOnIP
                     fi[1, 2 * en + 1] = shapeFunctionValueOnIP
-
+                
                 DH = DH + np.dot(P, fi) * jacobian * weights[ip]
                 DG = DG + np.dot(U, fi) * jacobian * weights[ip]
 

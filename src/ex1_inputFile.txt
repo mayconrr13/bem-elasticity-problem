@@ -45,5 +45,5 @@ Displacements = 0, Forces = 1
 element, displacement/forces, valueX, valueY
 2, 0, 0, 0
 3, 0, 0, 0
-6, 1, -1, 0
-7, 1, -1, 0
+6, 1, 1, 0
+7, 1, 1, 0

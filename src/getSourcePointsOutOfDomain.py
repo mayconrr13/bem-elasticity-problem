@@ -12,8 +12,8 @@ def getSourcePoints(duplicatedNodes, geometricNodes, elementsList):
         for k in range(len(elementsList[i].nodeList)):
             _, normalVector, _ = getPointProperties(k, elementAuxiliaryNodes, dimensionlessPoints)
                         
-            xCoordinate = normalVector[0] * 0.0001 + elementAuxiliaryNodes[k][0]
-            yCoordinate = normalVector[1] * 0.0001 + elementAuxiliaryNodes[k][1]
+            xCoordinate = normalVector[0] * 1 + elementAuxiliaryNodes[k][0]
+            yCoordinate = normalVector[1] * 1 + elementAuxiliaryNodes[k][1]
 
             sourcePointCoordinates = [xCoordinate, yCoordinate]
 
