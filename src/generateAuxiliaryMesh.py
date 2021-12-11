@@ -1,7 +1,6 @@
 # retorn uma lista com os nós referentes à malha de colocação
 from Element import Element
 
-
 def generateAuxiliaryMesh(elementsList: list, duplicatedNodes: list, geometricNodes: list):
     auxiliaryMesh = []
 

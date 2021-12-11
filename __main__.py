@@ -1,8 +1,5 @@
 from sympy.integrals.quadrature import gauss_legendre
 
-from src.utils.shapeFunctions import *
-from src.utils.diffShapeFunction import *
-
 def elasticityProblemBEM():
     # ler arquivo de entrada
     # GMESH???
