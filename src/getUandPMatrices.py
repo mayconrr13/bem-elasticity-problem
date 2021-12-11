@@ -10,14 +10,14 @@ from pointsProperties import getPointProperties
 from readInputFile import readInputFile
 from shapeFunctions import getShapeFunctionValueOnNode
 
-prescribedU, prescribedP, geometricNodes, _, elements = readInputFile("src/ex1_inputFile.txt")
+prescribedU, prescribedP, geometricNodes, internalPoints, elements = readInputFile("src/ex1_inputFile.txt")
 
 elementsList = getElementsList(elements)
 
 duplicatedNodes = getDuplicatedNodes(geometricNodes)
 auxiliaryMesh = generateAuxiliaryMesh(elementsList, duplicatedNodes, geometricNodes)
-# sourcePoints = getSourcePoints(duplicatedNodes, geometricNodes, elementsList)
-sourcePoints = auxiliaryMesh
+sourcePoints = getSourcePoints(duplicatedNodes, geometricNodes, elementsList)
+# sourcePoints = auxiliaryMesh
 
 dirac = [[1,0],[0,1]]
 
@@ -42,12 +42,13 @@ def getIndex(newList, parameter):
         if parameter == newList[i]:
             return i
 
-def getHandGMatrices():
-    HMatrix = np.zeros((2 * len(sourcePoints), 2 * len(sourcePoints)))
-    GMatrix = np.zeros((2 * len(sourcePoints), 2 * len(sourcePoints)))
+def getHandGMatrices(sourcePoints: list):
+    HMatrix = np.zeros((2 * len(sourcePoints), 2 * len(auxiliaryMesh)))
+    GMatrix = np.zeros((2 * len(sourcePoints), 2 * len(auxiliaryMesh)))
 
     # verificação de pontos fontes no contorno
     if sourcePoints == auxiliaryMesh:
+        print("check")
         HMatrix += np.identity(2 * len(sourcePoints)) * 1/2
 
     integrationPoints, weights = gauss_legendre(12, 5)
@@ -171,13 +172,9 @@ def getHandGMatrices():
                                 
     return HMatrix, GMatrix
 
-HMatrix, GMatrix = getHandGMatrices()
-soma = 0
-for i in range(2 * len(geometricNodes)):
-    soma += HMatrix[0][i]
-print("soma: ",soma)
+HMatrix, GMatrix = getHandGMatrices(sourcePoints)
 
-def applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints, auxiliaryMesh):
+def applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints):
     FHMatrix = HMatrix
     FGMatrix = GMatrix
     FVector = np.zeros(2 * len(sourcePoints), dtype=float)
@@ -202,8 +199,24 @@ def applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePo
     
     return FHMatrix, FGMatrix, FVector
 
-FHMatrix, FGMatrix, FVector = applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints, auxiliaryMesh)
+FHMatrix, FGMatrix, FVector = applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints)
 
 resultsVector = np.linalg.solve(FHMatrix, np.dot(FGMatrix, FVector))
 
-print(resultsVector)
+# criação do vertor de forças de superfície e de deslocamento no contorno
+boundaryDisplacements = np.array(resultsVector)
+boundaryForces = np.array(FVector)
+
+for i in range(len(prescribedU)):
+    index = prescribedU[i][0] 
+
+    boundaryForces[2 * index] = resultsVector[2 * index]
+    boundaryForces[2 * index + 1] = resultsVector[2 * index + 1] 
+
+    boundaryDisplacements[2 * index] = prescribedU[i][1][0]
+    boundaryDisplacements[2 * index + 1] = prescribedU[i][1][1]
+
+IntHMatrix, IntGMatrix = getHandGMatrices(internalPoints)
+internalDisplacements = np.dot(IntGMatrix, boundaryForces) - np.dot(IntHMatrix, boundaryDisplacements)
+
+print(internalDisplacements)
