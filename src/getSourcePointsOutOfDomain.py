@@ -1,5 +1,4 @@
-from Element import Element
-from pointsProperties import getPointProperties
+from src.pointsProperties import getPointProperties
 
 # retorna os pontos fontes localizados fora do domínio
 def getSourcePoints(duplicatedNodes, geometricNodes, elementsList):

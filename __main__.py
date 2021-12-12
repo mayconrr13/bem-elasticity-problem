@@ -3,6 +3,7 @@ from src.readInputFile import readInputFile
 from src.handleAuxiliaryMesh import handleAuxiliaryMesh
 from src.solveElasticityBoundaryProblem import solveElasticityBoundaryProblem
 from src.createParaviewFile import createParaviewFile
+import matplotlib.pyplot as plt
 
 def elasticityProblemBEM(file: str):
     print("Início do processo")
@@ -17,12 +18,11 @@ def elasticityProblemBEM(file: str):
 
     # Cria malha de colocação
     duplicatedNodes, auxiliaryMesh = handleAuxiliaryMesh(elements, geometricNodes)
-    sourcePoints = auxiliaryMesh  
 
     # Resolução do problema de elasticidade por MEC   
     (
         boundaryDisplacements, 
-        boundaryForces, 
+        _, 
         internalDisplacements, 
         internalStress
     ) = solveElasticityBoundaryProblem(
@@ -36,13 +36,14 @@ def elasticityProblemBEM(file: str):
         auxiliaryMesh,
         12
     )
+    print(boundaryDisplacements)
 
     # Criação do arquivo de saíde em Paraview
-    createParaviewFile(boundaryDisplacements, boundaryForces, internalDisplacements, internalStress,auxiliaryMesh, internalPoints, elements)
+    createParaviewFile(boundaryDisplacements, internalDisplacements, internalStress,auxiliaryMesh, internalPoints, elements)
 
     end = timer()
     print("Fim do processo. Tempo total: ", "%.5f" % (end - start), " segundos.")
 
     return
 
-elasticityProblemBEM("src/ex1_inputFileEP.txt")
+elasticityProblemBEM("src/generateInputFile/squarePlate1EO2.txt")

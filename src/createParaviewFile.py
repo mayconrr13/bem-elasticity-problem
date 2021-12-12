@@ -1,6 +1,6 @@
 from timeit import default_timer as timer
 
-def createParaviewFile(boundaryDisplacements, boundaryForces, internalDisplacements, internalStress,auxiliaryMesh, internalPoints, elements):
+def createParaviewFile(boundaryDisplacements, internalDisplacements, internalStress,auxiliaryMesh, internalPoints, elements):
     start = timer()
 
     outputFile = open('results.vtu', 'a')
@@ -24,7 +24,7 @@ def createParaviewFile(boundaryDisplacements, boundaryForces, internalDisplaceme
     outputFile.write('    <Cells>\n      <DataArray type="Int32" Name="connectivity" format="ascii">\n')
     for i in range(len(elements)):
         nodeList = elements[i].nodeList                
-        outputFile.write(str(nodeList[0]) + ' ' + str(nodeList[1]) + '\n')
+        outputFile.write(str(nodeList[0]) + ' ' + str(nodeList[3]) + ' ' + str(nodeList[1]) + ' ' + str(nodeList[2]) + '\n')
     
     for j in range(len(internalPoints)):              
         outputFile.write(str(len(auxiliaryMesh) + j) + '\n')

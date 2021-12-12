@@ -2,6 +2,8 @@ import numpy as np
 import math
 from timeit import default_timer as timer
 
+from numpy.lib.utils import source
+
 from src.getIntegrationPointCoordinates import getIntegrationPointCoordinates
 from src.pointsProperties import getPointProperties
 from src.shapeFunctions import getShapeFunctionValueOnNode
@@ -209,7 +211,7 @@ def handleResultantVectors(resultsVector, FVector, prescribedU):
 def solveBoundaryProblem(sourcePoints: list, prescribedU: list, prescribedP: list, auxiliaryMesh: list, duplicatedNodes: list, elementsList: list, geometricNodes: list, integrationPoints: list, weights: list, poisson: float, G: float):
     print("  3 - Resolução do problema no contorno")
     start = timer()
-
+    print(sourcePoints)
     HMatrix, GMatrix = getHandGMatrices(sourcePoints, auxiliaryMesh, duplicatedNodes, elementsList, geometricNodes, integrationPoints, weights, poisson, G)
     FHMatrix, FGMatrix, FVector = applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints)
     resultsVector = np.linalg.solve(FHMatrix, np.dot(FGMatrix, FVector))

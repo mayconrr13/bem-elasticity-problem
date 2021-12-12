@@ -2,25 +2,29 @@
 Boundary Element Method - Elasticity Problem
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-numberOfExternalNodes: 8
+numberOfExternalNodes: 12
 numberOfInternalNodes: 7
-nodesPerElement: 2
+nodesPerElement: 3
 numberOfElements: 4
-displacements: 2
-forces: 2
+displacements: 3
+forces: 3
 
 - - - - - - - - -
 Nodes coordinates
 - - - - - - - - -
 node, x, y
 0, 0, 0
-1, 1, 0
+1, 0.5, 0
 2, 1, 0
-3, 1, 1
-4, 1, 1
-5, 0, 1
-6, 0, 1
-7, 0, 0
+3, 1, 0
+4, 1, 0.5
+5, 1, 1
+6, 1, 1
+7, 0.5, 1
+8, 0, 1
+9, 0, 1
+10, 0, 0.5
+11, 0, 0
 
 - - - - - - - - - - - - - - 
 Internal points coordinates
@@ -38,24 +42,26 @@ node, x, y
 Elements nodes 
 - - - - - - - -
 element, x, y
-0, 0, 1
-1, 2, 3
-2, 4, 5
-3, 6, 7
+0, 0, 1, 2
+1, 3, 4, 5
+2, 6, 7, 8
+3, 9, 10, 11
 
 - - - - - - - - - - - - - - - -
 Displacements 
 - - - - - - - - - - - - - - - -
 element, dispX, dispY
-2, 0, 0
-3, 0, 0
+9, 0, 0
+10, 0, 0
+11, 0, 0
 
 - - - - - - - - - - - - - - - -
 Forces 
 - - - - - - - - - - - - - - - -
 element, dispX, dispY
+4, 1, 0
+5, 1, 0
 6, 1, 0
-7, 1, 0
 
 - - - - - - - - -
 Materials
