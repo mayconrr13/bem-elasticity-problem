@@ -3,7 +3,7 @@ Boundary Element Method - Potential Problem - Artigo - 3 Elementos lineares
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 numberOfExternalNodes: 8
-numberOfInternalNodes: 3
+numberOfInternalNodes: 7
 nodesPerElement: 2
 numberOfElements: 4
 prescribedValues: 4
@@ -28,6 +28,10 @@ node, x, y
 0, 0.5, 0.5
 1, 0.25, 0.25
 2, 0.75, 0.75
+3, 0.25, 0.5
+4, 0.25, 0.75
+5, 0.75, 0.5
+6, 0.75, 0.25
 
 - - - - - - - -
 Elements nodes 

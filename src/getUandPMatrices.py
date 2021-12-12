@@ -51,8 +51,8 @@ def getHandGMatrices(sourcePoints: list):
         HMatrix += np.identity(2 * len(sourcePoints)) * 1/2
 
     integrationPoints, weights = gauss_legendre(20, 5)
-    G = 0.5 # kN/m2
     poisson = 0
+    G = 1 / (2 * (1 + poisson)) # kN/m2
 
     for sp in range(len(sourcePoints)):
         for el in range(len(elementsList)):
@@ -227,63 +227,103 @@ for i in range(len(prescribedU)):
     boundaryDisplacements[2 * index] = prescribedU[i][1][0]
     boundaryDisplacements[2 * index + 1] = prescribedU[i][1][1]
 
-print(boundaryDisplacements)
 IntHMatrix, IntGMatrix = getHandGMatrices(internalPoints)
 internalDisplacements = np.dot(IntGMatrix, boundaryForces) - np.dot(IntHMatrix, boundaryDisplacements)
 
-# def getInternalStress():
-#     HMatrix = np.zeros((2 * len(sourcePoints), len(auxiliaryMesh)))
-#     GMatrix = np.zeros((2 * len(sourcePoints), len(auxiliaryMesh)))
+def getInternalStress(sourcePoints):
+    DMatrix = np.zeros((4 * len(sourcePoints), 2 * len(auxiliaryMesh)))
+    SMatrix = np.zeros((4 * len(sourcePoints), 2 * len(auxiliaryMesh)))
 
-#     integrationPoints, weights = gauss_legendre(12, 5)
-#     G = 0.5 # kN/m2
-#     poisson = 0
+    integrationPoints, weights = gauss_legendre(12, 5)
+    G = 0.5 # kN/m2
+    poisson = 0
 
-#     for sp in range(len(sourcePoints)):
-#         for el in range(len(elementsList)):
-#             elementNodes = elementsList[el].getElementNodesRealCoordinates(geometricNodes)
-#             dimensionlessPoints = elementsList[el].getDimensionlessPointsBasedOnGeometricCoordinates()
-#             auxiliaryDimensionlessPoints = elementsList[el].getDimensionlessPointsBasedOnElementContinuity(duplicatedNodes)
+    for sp in range(len(sourcePoints)):
+        for el in range(len(elementsList)):
+            elementNodes = elementsList[el].getElementNodesRealCoordinates(geometricNodes)
+            dimensionlessPoints = elementsList[el].getDimensionlessPointsBasedOnGeometricCoordinates()
+            auxiliaryDimensionlessPoints = elementsList[el].getDimensionlessPointsBasedOnElementContinuity(duplicatedNodes)
 
-#             DH = np.zeros((2, 2 * len(elementNodes)))
-#             DG = np.zeros((2, 2 * len(elementNodes)))
-   
-#             for ip in range(len(integrationPoints)):           
-#                 integrationPointsRealCoordinates = getIntegrationPointCoordinates(integrationPoints[ip], elementNodes, dimensionlessPoints)
+            Dcontribution = np.zeros((4,2 * len(elementNodes)))
+            Scontribution = np.zeros((4,2 * len(elementNodes)))   
 
-#                 integrationPointRadius = getRadius(sourcePoints[sp], integrationPointsRealCoordinates)
-#                 radius = integrationPointRadius[1]
-#                 radiusDiff = [integrationPointRadius[0][0] / integrationPointRadius[1], integrationPointRadius[0][1] / integrationPointRadius[1]]
+            for ip in range(len(integrationPoints)):           
+                integrationPointsRealCoordinates = getIntegrationPointCoordinates(integrationPoints[ip], elementNodes, dimensionlessPoints)
 
-#                 _, normalVector, jacobian = getPointProperties(ip, elementNodes, dimensionlessPoints)
+                integrationPointRadius = getRadius(sourcePoints[sp], integrationPointsRealCoordinates)
+                radius = integrationPointRadius[1]
+                radiusDiff = [integrationPointRadius[0][0] / integrationPointRadius[1], integrationPointRadius[0][1] / integrationPointRadius[1]]
+
+                _, normalVector, jacobian = getPointProperties(ip, elementNodes, dimensionlessPoints)
                 
-#                 DRDN = radiusDiff[0] * normalVector[0] +  radiusDiff[1] * normalVector[1]
+                DRDN = radiusDiff[0] * normalVector[0] +  radiusDiff[1] * normalVector[1]
                 
-#                 D = np.zeros((4,2))
-#                 S = np.zeros((4,2))
+                D = np.zeros((4,2))
+                S = np.zeros((4,2))
 
-#                 for i in range(2):
-#                     for j in range(2):
+                # preenchimento das matrizes D e S
+                for k in range(2):
+                    D[0, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (dirac[k][0] * radiusDiff[0] + dirac[k][0] * radiusDiff[0] - dirac[0][0] * radiusDiff[k]) + 2 * radiusDiff[0] * radiusDiff[0] * radiusDiff[k]) #i=0 e j=0
+                    D[1, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (dirac[k][0] * radiusDiff[1] + dirac[k][1] * radiusDiff[0] - dirac[0][1] * radiusDiff[k]) + 2 * radiusDiff[0] * radiusDiff[1] * radiusDiff[k]) #i=0 e j=1
+                    D[2, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (dirac[k][1] * radiusDiff[0] + dirac[k][0] * radiusDiff[1] - dirac[1][0] * radiusDiff[k]) + 2 * radiusDiff[1] * radiusDiff[0] * radiusDiff[k]) #i=1 e j=0
+                    D[3, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (dirac[k][1] * radiusDiff[1] + dirac[k][1] * radiusDiff[1] - dirac[1][1] * radiusDiff[k]) + 2 * radiusDiff[1] * radiusDiff[1] * radiusDiff[k]) #i=1 e j=1
 
+                    # k0, i0, j0
+                    partial1S0 = 2 * DRDN * ((1 - 2 * poisson) * dirac[0][0] * radiusDiff[k] + poisson * (dirac[0][k] * radiusDiff[0] + dirac[0][k] * radiusDiff[0]) - 4 * radiusDiff[0] * radiusDiff[0] * radiusDiff[k])
+                    partial2S0 = 2 * poisson * (normalVector[0] * radiusDiff[0] * radiusDiff[k] + normalVector[0] * radiusDiff[0] * radiusDiff[k])
+                    partial3S0 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[0] * radiusDiff[0] + normalVector[0] * dirac[0][k] + normalVector[0] * dirac[0][k])
+                    partial4S0 = (- 1 + 4 * poisson) * normalVector[k] * dirac[0][0] 
+                    S[0, k] += (G / (2 * math.pi * (1 - poisson) * radius * radius)) * (partial1S0 + partial2S0 + partial3S0 + partial4S0)
 
-#                 fi = np.zeros((2, 2 * len(elementNodes))) 
+                    # k0, i0, j1
+                    partial1S1 = 2 * DRDN * ((1 - 2 * poisson) * dirac[0][1] * radiusDiff[k] + poisson * (dirac[0][k] * radiusDiff[1] + dirac[1][k] * radiusDiff[0]) - 4 * radiusDiff[0] * radiusDiff[1] * radiusDiff[k])
+                    partial2S1 = 2 * poisson * (normalVector[0] * radiusDiff[1] * radiusDiff[k] + normalVector[1] * radiusDiff[0] * radiusDiff[k])
+                    partial3S1 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[0] * radiusDiff[1] + normalVector[1] * dirac[0][k] + normalVector[0] * dirac[1][k])
+                    partial4S1 = (- 1 + 4 * poisson) * normalVector[k] * dirac[0][1] 
+                    S[1, k] += (G / (2 * math.pi * (1 - poisson) * radius * radius)) * (partial1S1 + partial2S1 + partial3S1 + partial4S1)
 
-#                 for en in range(len(elementNodes)):
-#                     shapeFunctionValueOnIP = getShapeFunctionValueOnNode(integrationPoints[ip], en, auxiliaryDimensionlessPoints)
+                    # k0, i1, j0
+                    partial1S2 = 2 * DRDN * ((1 - 2 * poisson) * dirac[1][0] * radiusDiff[k] + poisson * (dirac[1][k] * radiusDiff[0] + dirac[0][k] * radiusDiff[1]) - 4 * radiusDiff[1] * radiusDiff[0] * radiusDiff[k])
+                    partial2S2 = 2 * poisson * (normalVector[1] * radiusDiff[0] * radiusDiff[k] + normalVector[0] * radiusDiff[1] * radiusDiff[k])
+                    partial3S2 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[1] * radiusDiff[0] + normalVector[0] * dirac[1][k] + normalVector[1] * dirac[0][k])
+                    partial4S2 = (- 1 + 4 * poisson) * normalVector[k] * dirac[1][0] 
+                    S[2, k] += (G / (2 * math.pi * (1 - poisson) * radius * radius)) * (partial1S2 + partial2S2 + partial3S2 + partial4S2)
+
+                    # k0, i1, j1
+                    partial1S3 = 2 * DRDN * ((1 - 2 * poisson) * dirac[1][0] * radiusDiff[k] + poisson * (dirac[1][k] * radiusDiff[1] + dirac[1][k] * radiusDiff[1]) - 4 * radiusDiff[1] * radiusDiff[1] * radiusDiff[k])
+                    partial2S3 = 2 * poisson * (normalVector[1] * radiusDiff[1] * radiusDiff[k] + normalVector[1] * radiusDiff[1] * radiusDiff[k])
+                    partial3S3 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[1] * radiusDiff[1] + normalVector[1] * dirac[1][k] + normalVector[1] * dirac[1][k])
+                    partial4S3 = (- 1 + 4 * poisson) * normalVector[k] * dirac[1][1] 
+                    S[3, k] += (G / (2 * math.pi * (1 - poisson) * radius * radius)) * (partial1S3 + partial2S3 + partial3S3 + partial4S3)
+                
+                fi = np.zeros((2, 2 * len(elementNodes))) 
+
+                for en in range(len(elementNodes)):
+                    shapeFunctionValueOnIP = getShapeFunctionValueOnNode(integrationPoints[ip], en, auxiliaryDimensionlessPoints)
                     
-#                     fi[0, 2 * en] = shapeFunctionValueOnIP
-#                     fi[1, 2 * en + 1] = shapeFunctionValueOnIP
-                
-#                 DH = DH + np.dot(P, fi) * jacobian * weights[ip]
-#                 DG = DG + np.dot(U, fi) * jacobian * weights[ip]
-            
-#             # colocar DH e DG na matriz global
-#             for en in range(len(elementNodes)):
-#                 for i in range(2):
-#                     HMatrix[2*sp][2 * elementsList[el].nodeList[en] + i] += DH[0][2 * en + i]
-#                     HMatrix[2*sp + 1][2 * elementsList[el].nodeList[en] + i] += DH[1][2 * en + i]
-
-#                     GMatrix[2*sp][2 * elementsList[el].nodeList[en] + i] += DG[0][2 * en + i]
-#                     GMatrix[2*sp + 1][2 * elementsList[el].nodeList[en] + i] += DG[1][2 * en + i]
+                    fi[0, 2 * en] = shapeFunctionValueOnIP
+                    fi[1, 2 * en + 1] = shapeFunctionValueOnIP
                                 
-#     return HMatrix, GMatrix
+                Dcontribution = Dcontribution + np.dot(D, fi) * jacobian * weights[ip]
+                Scontribution = Scontribution + np.dot(S, fi) * jacobian * weights[ip]
+            
+            # colocar DH e DG na matriz global
+            for en in range(len(elementNodes)):
+                for i in range(2):
+                    DMatrix[4*sp][2 * elementsList[el].nodeList[en] + i] += Dcontribution[0][2 * en + i]
+                    DMatrix[4*sp + 1][2 * elementsList[el].nodeList[en] + i] += Dcontribution[1][2 * en + i]
+                    DMatrix[4*sp + 2][2 * elementsList[el].nodeList[en] + i] += Dcontribution[2][2 * en + i]
+                    DMatrix[4*sp + 3][2 * elementsList[el].nodeList[en] + i] += Dcontribution[3][2 * en + i]
+
+                    SMatrix[4*sp][2 * elementsList[el].nodeList[en] + i] += Scontribution[0][2 * en + i]
+                    SMatrix[4*sp + 1][2 * elementsList[el].nodeList[en] + i] += Scontribution[1][2 * en + i]
+                    SMatrix[4*sp + 2][2 * elementsList[el].nodeList[en] + i] += Scontribution[2][2 * en + i]
+                    SMatrix[4*sp + 3][2 * elementsList[el].nodeList[en] + i] += Scontribution[3][2 * en + i]
+                                
+    return DMatrix, SMatrix
+
+DMatrix, SMatrix = getInternalStress(internalPoints)
+
+internalStress = np.dot(DMatrix, boundaryForces) - np.dot(SMatrix, boundaryDisplacements)
+
+print(internalStress)
