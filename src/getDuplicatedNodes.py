@@ -1,4 +1,6 @@
 import numpy as np
+from timeit import default_timer as timer
+from sympy.integrals.quadrature import gauss_legendre
 
 # retorna os indexes referentes a lista de nós de parâmetro
 def getDuplicatedNodes(nodeList: list):

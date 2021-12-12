@@ -1,6 +1,7 @@
 from sympy.integrals.quadrature import gauss_legendre
 import numpy as np
 import math
+from timeit import default_timer as timer
 from getDuplicatedNodes import getDuplicatedNodes
 from getElementList import getElementsList
 from generateAuxiliaryMesh import generateAuxiliaryMesh
@@ -10,14 +11,20 @@ from pointsProperties import getPointProperties
 from readInputFile import readInputFile
 from shapeFunctions import getShapeFunctionValueOnNode
 
+startprocess = timer()
+startRead = timer()
 prescribedU, prescribedP, geometricNodes, internalPoints, elements = readInputFile("src/ex1_inputFile.txt")
+endRead = timer()
+print("Leitura de dados: ","%.5f" % (endRead - startRead), " segundos.")
 
+startPrep = timer()
 elementsList = getElementsList(elements)
-
 duplicatedNodes = getDuplicatedNodes(geometricNodes)
 auxiliaryMesh = generateAuxiliaryMesh(elementsList, duplicatedNodes, geometricNodes)
 # sourcePoints = getSourcePoints(duplicatedNodes, geometricNodes, elementsList)
 sourcePoints = auxiliaryMesh
+endPrep = timer()
+print("Preparação das malhas auxiliares: ", "%.5f" % (endPrep - startPrep), " segundos.")
 
 dirac = [[1,0],[0,1]]
 
@@ -50,7 +57,7 @@ def getHandGMatrices(sourcePoints: list):
     if sourcePoints == auxiliaryMesh:
         HMatrix += np.identity(2 * len(sourcePoints)) * 1/2
 
-    integrationPoints, weights = gauss_legendre(20, 5)
+    integrationPoints, weights = gauss_legendre(12, 5)
     poisson = 0
     G = 1 / (2 * (1 + poisson)) # kN/m2
 
@@ -183,7 +190,10 @@ def getHandGMatrices(sourcePoints: list):
                                 
     return HMatrix, GMatrix
 
+startMatrices = timer()
 HMatrix, GMatrix = getHandGMatrices(sourcePoints)
+endMatrices = timer()
+print("Geração das matrizes H e G: ", "%.5f" % (endMatrices - startMatrices), " segundos.")
 
 def applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints):
     FHMatrix = HMatrix
@@ -210,33 +220,51 @@ def applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePo
     
     return FHMatrix, FGMatrix, FVector
 
+startBoudaryConditions = timer()
 FHMatrix, FGMatrix, FVector = applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints)
+endBoudaryConditions = timer()
+print("Aplicação das condições de contorno: ", "%.5f" % (endBoudaryConditions - startBoudaryConditions), " segundos.")
 
+
+startSolve = timer()
 resultsVector = np.linalg.solve(FHMatrix, np.dot(FGMatrix, FVector))
+endSolve = timer()
+print("Resolução do sistema: ", "%.5f" % (endSolve - startSolve), " segundos.")
 
 # criação do vertor de forças de superfície e de deslocamento no contorno
-boundaryDisplacements = np.array(resultsVector)
-boundaryForces = np.array(FVector)
+def handleResultantVectors():
+    boundaryDisplacements = np.array(resultsVector)
+    boundaryForces = np.array(FVector)
 
-for i in range(len(prescribedU)):
-    index = prescribedU[i][0] 
+    for i in range(len(prescribedU)):
+        index = prescribedU[i][0] 
 
-    boundaryForces[2 * index] = resultsVector[2 * index]
-    boundaryForces[2 * index + 1] = resultsVector[2 * index + 1] 
+        boundaryForces[2 * index] = resultsVector[2 * index]
+        boundaryForces[2 * index + 1] = resultsVector[2 * index + 1] 
 
-    boundaryDisplacements[2 * index] = prescribedU[i][1][0]
-    boundaryDisplacements[2 * index + 1] = prescribedU[i][1][1]
+        boundaryDisplacements[2 * index] = prescribedU[i][1][0]
+        boundaryDisplacements[2 * index + 1] = prescribedU[i][1][1]
+    
+    return boundaryDisplacements, boundaryForces
 
+startResultantVectors = timer()
+boundaryDisplacements, boundaryForces = handleResultantVectors()
+endResultantVectors = timer()
+print("Geração dos vetores resultantes: ", "%.5f" % (endResultantVectors - startResultantVectors), " segundos.")
+
+startInternalDisp = timer()
 IntHMatrix, IntGMatrix = getHandGMatrices(internalPoints)
 internalDisplacements = np.dot(IntGMatrix, boundaryForces) - np.dot(IntHMatrix, boundaryDisplacements)
+endInternalDisp = timer()
+print("Deslocamentos dos pontos internos: ", "%.5f" % (endInternalDisp - startInternalDisp), " segundos.")
 
 def getInternalStress(sourcePoints):
     DMatrix = np.zeros((4 * len(sourcePoints), 2 * len(auxiliaryMesh)))
     SMatrix = np.zeros((4 * len(sourcePoints), 2 * len(auxiliaryMesh)))
 
     integrationPoints, weights = gauss_legendre(12, 5)
-    G = 0.5 # kN/m2
     poisson = 0
+    G = 1 / (2 * (1 + poisson)) # kN/m2
 
     for sp in range(len(sourcePoints)):
         for el in range(len(elementsList)):
@@ -322,8 +350,16 @@ def getInternalStress(sourcePoints):
                                 
     return DMatrix, SMatrix
 
+startInternalStress = timer()
 DMatrix, SMatrix = getInternalStress(internalPoints)
-
 internalStress = np.dot(DMatrix, boundaryForces) - np.dot(SMatrix, boundaryDisplacements)
+endInternalStress = timer()
+print("Tensões dos pontos internos: ", "%.5f" % (endInternalStress - startInternalStress), " segundos.")
+endprocess = timer()
 
-print(internalStress)
+print("Tempo total: ", "%.5f" % (endprocess - startprocess), " segundos")
+
+start = timer()
+integrationPoints, weights = gauss_legendre(12, 5)
+end = timer()
+print("%.5f" % (start - end))
