@@ -1,8 +1,14 @@
+from timeit import default_timer as timer
+
+from src.Element import Element
+
 def lineToIgnore(inputFile: str):
     inputFile.readline()
     return
 
 def readInputFile(file: str):
+    start = timer()
+
     inputFile = open(file, "r")
 
     lineToIgnore(inputFile)
@@ -14,7 +20,8 @@ def readInputFile(file: str):
     numberOfInternalNodes = int(inputFile.readline().split(":")[1])   
     nodesPerElement = int(inputFile.readline().split(":")[1]) 
     numberOfElements = int(inputFile.readline().split(":")[1])
-    prescribedValues = int(inputFile.readline().split(":")[1])
+    displacements = int(inputFile.readline().split(":")[1])
+    forces = int(inputFile.readline().split(":")[1])
 
     lineToIgnore(inputFile)
     lineToIgnore(inputFile)
@@ -54,28 +61,44 @@ def readInputFile(file: str):
             if kk != 0:
                 element.append(int(item[kk]))
         
-        elements.append(element)
+        elements.append(Element(element))
 
     lineToIgnore(inputFile)
     lineToIgnore(inputFile)
     lineToIgnore(inputFile)
     lineToIgnore(inputFile)
     lineToIgnore(inputFile)
+
+    prescribedDisplacements = []
+    for l in range(displacements):
+        displacement = inputFile.readline().split(",")
+        prescribedDisplacements.append([int(displacement[0]), [float(displacement[1]), float(displacement[2])]])
+
+    lineToIgnore(inputFile)
+    lineToIgnore(inputFile)
+    lineToIgnore(inputFile)
+    lineToIgnore(inputFile)
     lineToIgnore(inputFile)
 
-    u= []
-    q= []
-    for l in range(prescribedValues):
-        potentialFlow = inputFile.readline().split(",")
+    prescribedForces = []
+    for l in range(forces):
+        force = inputFile.readline().split(",")
+        prescribedForces.append([int(force[0]), [float(force[1]), float(force[2])]])
 
-        if int(potentialFlow[1]) == 1:
-            q.append([int(potentialFlow[0]), [float(potentialFlow[2]), float(potentialFlow[3])]])
+    lineToIgnore(inputFile)
+    lineToIgnore(inputFile)
+    lineToIgnore(inputFile)
+    lineToIgnore(inputFile)
+    lineToIgnore(inputFile)
 
-        elif int(potentialFlow[1]) == 0:
-            u.append([int(potentialFlow[0]), [float(potentialFlow[2]), float(potentialFlow[3])]])
+    material = inputFile.readline().split(",")
+    material = [float(material[0]), float(material[1])]
 
     inputFile.close()
 
-    return u, q, geometricNodes, internalPoints, elements
+    end = timer()
+    print("  1 - Leitura de dados: ", "%.5f" % (end - start), " segundos.\n")
 
-# u, q, geometricNodes, internalPoints, elements = readInputFile("ex1_inputFile.txt")
+    return prescribedDisplacements, prescribedForces, material, geometricNodes, internalPoints, elements
+
+# prescribedDisplacements, prescribedForces, material, geometricNodes, internalPoints, elements = readInputFile("src/ex1_inputFileEP.txt")

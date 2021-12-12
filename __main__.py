@@ -1,18 +1,41 @@
-from sympy.integrals.quadrature import gauss_legendre
+from timeit import default_timer as timer
+from src.readInputFile import readInputFile
+from src.solveElasticityBoundaryProblem import solveElasticityBoundaryProblem
+from src.createParaviewFile import createParaviewFile
 
-def elasticityProblemBEM():
-    # ler arquivo de entrada
-    # GMESH???
+def elasticityProblemBEM(file: str):
+    print("Início do processo")
+    start = timer()
+    # Leitura do arquivo de entrada
+    (prescribedDisplacements, 
+    prescribedForces, 
+    material, 
+    geometricNodes, 
+    internalPoints, 
+    elements) = readInputFile(file)    
 
-    # criar malha de colocação
+    # Resolução do problema de elasticidade por MEC   
+    (
+        boundaryDisplacements, 
+        boundaryForces, 
+        internalDisplacements, 
+        internalStress
+    ) = solveElasticityBoundaryProblem(
+        prescribedDisplacements, 
+        prescribedForces, 
+        material, 
+        geometricNodes, 
+        internalPoints, 
+        elements,
+        12
+    )
 
-    # RESOLVER PROBLEMA
-    # Definição do número de pontos de integraçãoque serão utilizados
-    integrationPoints, weights = gauss_legendre(12, 10)
+    # Criação do arquivo de saíde em Paraview
+    createParaviewFile(boundaryDisplacements, boundaryForces, internalDisplacements, internalStress)
 
-    # criar arquivo de saída
-    # PARAVIEW
+    end = timer()
+    print("Fim do processo. Tempo total: ", "%.5f" % (end - start), " segundos.")
 
     return
 
-elasticityProblemBEM()
+elasticityProblemBEM("src/ex1_inputFileEP.txt")

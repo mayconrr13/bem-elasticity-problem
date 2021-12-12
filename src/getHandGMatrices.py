@@ -1,65 +1,25 @@
-from sympy.integrals.quadrature import gauss_legendre
 import numpy as np
 import math
 from timeit import default_timer as timer
-from getDuplicatedNodes import getDuplicatedNodes
-from getElementList import getElementsList
-from generateAuxiliaryMesh import generateAuxiliaryMesh
-from getIntegrationPointCoordinates import getIntegrationPointCoordinates
-from getSourcePointsOutOfDomain import getSourcePoints
-from pointsProperties import getPointProperties
-from readInputFile import readInputFile
-from shapeFunctions import getShapeFunctionValueOnNode
 
-startprocess = timer()
-startRead = timer()
-prescribedU, prescribedP, geometricNodes, internalPoints, elements = readInputFile("src/ex1_inputFile.txt")
-endRead = timer()
-print("Leitura de dados: ","%.5f" % (endRead - startRead), " segundos.")
-
-startPrep = timer()
-elementsList = getElementsList(elements)
-duplicatedNodes = getDuplicatedNodes(geometricNodes)
-auxiliaryMesh = generateAuxiliaryMesh(elementsList, duplicatedNodes, geometricNodes)
-# sourcePoints = getSourcePoints(duplicatedNodes, geometricNodes, elementsList)
-sourcePoints = auxiliaryMesh
-endPrep = timer()
-print("Preparação das malhas auxiliares: ", "%.5f" % (endPrep - startPrep), " segundos.")
+from src.getIntegrationPointCoordinates import getIntegrationPointCoordinates
+from src.pointsProperties import getPointProperties
+from src.shapeFunctions import getShapeFunctionValueOnNode
+from src.auxiliaryFunctions import * 
 
 dirac = [[1,0],[0,1]]
 
-def getRadius(sourcePoint: list, integrationPointCoordinates: list):
+#### Resolução do problema no contorno
+# H[] e G[]
+def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: list, elementsList: list, geometricNodes: list, integrationPoints: list, weights: list, poisson: float, G:float):
+    start = timer()
 
-    xComponent = integrationPointCoordinates[0] - sourcePoint[0]
-    yComponent = integrationPointCoordinates[1] - sourcePoint[1]
-    radius = (xComponent ** 2 + yComponent ** 2) ** (1/2)
-
-    return [[xComponent, yComponent], radius]
-
-def handleSourcePointOnElement(element, sourcePointCoordinate, duplicatedNodes, geometricNodes):
-    auxiliaryNodesCoordinates = element.getAuxiliaryNodesCoordinates(duplicatedNodes, geometricNodes)
-
-    if sourcePointCoordinate in auxiliaryNodesCoordinates:
-        return True
-    else:
-        return False
-
-def getIndex(newList, parameter):
-    for i in range(len(newList)):
-        if parameter == newList[i]:
-            return i
-
-def getHandGMatrices(sourcePoints: list):
     HMatrix = np.zeros((2 * len(sourcePoints), 2 * len(auxiliaryMesh)))
     GMatrix = np.zeros((2 * len(sourcePoints), 2 * len(auxiliaryMesh)))
 
     # verificação de pontos fontes no contorno
     if sourcePoints == auxiliaryMesh:
         HMatrix += np.identity(2 * len(sourcePoints)) * 1/2
-
-    integrationPoints, weights = gauss_legendre(12, 5)
-    poisson = 0
-    G = 1 / (2 * (1 + poisson)) # kN/m2
 
     for sp in range(len(sourcePoints)):
         for el in range(len(elementsList)):
@@ -187,15 +147,16 @@ def getHandGMatrices(sourcePoints: list):
 
                     GMatrix[2*sp][2 * elementsList[el].nodeList[en] + i] += DG[0][2 * en + i] + displacementCPVContribution[0][2 * en + i]
                     GMatrix[2*sp + 1][2 * elementsList[el].nodeList[en] + i] += DG[1][2 * en + i] + displacementCPVContribution[1][2 * en + i]
-                                
+
+    end = timer()
+    print("    -- Geração das matrizes H e G: ", "%.5f" % (end - start), " segundos.")     
+
     return HMatrix, GMatrix
 
-startMatrices = timer()
-HMatrix, GMatrix = getHandGMatrices(sourcePoints)
-endMatrices = timer()
-print("Geração das matrizes H e G: ", "%.5f" % (endMatrices - startMatrices), " segundos.")
-
+# Aplicação da condições de contorno
 def applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints):
+    start = timer()
+
     FHMatrix = HMatrix
     FGMatrix = GMatrix
     FVector = np.zeros(2 * len(sourcePoints), dtype=float)
@@ -217,22 +178,16 @@ def applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePo
 
         FVector[2 * index] += prescribedP[k][1][0]
         FVector[2 * index + 1] += prescribedP[k][1][1]
+
+    end = timer()
+    print("    -- Aplicação da condições de contorno: ", "%.5f" % (end - start), " segundos.")  
     
     return FHMatrix, FGMatrix, FVector
 
-startBoudaryConditions = timer()
-FHMatrix, FGMatrix, FVector = applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints)
-endBoudaryConditions = timer()
-print("Aplicação das condições de contorno: ", "%.5f" % (endBoudaryConditions - startBoudaryConditions), " segundos.")
-
-
-startSolve = timer()
-resultsVector = np.linalg.solve(FHMatrix, np.dot(FGMatrix, FVector))
-endSolve = timer()
-print("Resolução do sistema: ", "%.5f" % (endSolve - startSolve), " segundos.")
-
 # criação do vertor de forças de superfície e de deslocamento no contorno
-def handleResultantVectors():
+def handleResultantVectors(resultsVector, FVector, prescribedU):
+    start = timer()
+
     boundaryDisplacements = np.array(resultsVector)
     boundaryForces = np.array(FVector)
 
@@ -244,27 +199,34 @@ def handleResultantVectors():
 
         boundaryDisplacements[2 * index] = prescribedU[i][1][0]
         boundaryDisplacements[2 * index + 1] = prescribedU[i][1][1]
+
+    end = timer()
+    print("    -- Obtenção dos vetores resultantes: ", "%.5f" % (end - start), " segundos.")  
     
     return boundaryDisplacements, boundaryForces
 
-startResultantVectors = timer()
-boundaryDisplacements, boundaryForces = handleResultantVectors()
-endResultantVectors = timer()
-print("Geração dos vetores resultantes: ", "%.5f" % (endResultantVectors - startResultantVectors), " segundos.")
+# Resolução do problema no contorno
+def solveBoundaryProblem(sourcePoints: list, prescribedU: list, prescribedP: list, auxiliaryMesh: list, duplicatedNodes: list, elementsList: list, geometricNodes: list, integrationPoints: list, weights: list, poisson: float, G: float):
+    print("  3 - Resolução do problema no contorno")
+    start = timer()
 
-startInternalDisp = timer()
-IntHMatrix, IntGMatrix = getHandGMatrices(internalPoints)
-internalDisplacements = np.dot(IntGMatrix, boundaryForces) - np.dot(IntHMatrix, boundaryDisplacements)
-endInternalDisp = timer()
-print("Deslocamentos dos pontos internos: ", "%.5f" % (endInternalDisp - startInternalDisp), " segundos.")
+    HMatrix, GMatrix = getHandGMatrices(sourcePoints, auxiliaryMesh, duplicatedNodes, elementsList, geometricNodes, integrationPoints, weights, poisson, G)
+    FHMatrix, FGMatrix, FVector = applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints)
+    resultsVector = np.linalg.solve(FHMatrix, np.dot(FGMatrix, FVector))
+    boundaryDisplacements, boundaryForces = handleResultantVectors(resultsVector, FVector, prescribedU)
 
-def getInternalStress(sourcePoints):
+    end = timer()
+    print("    -- Tempo total: ", "%.5f" % (end - start), " segundos.\n")
+
+    return boundaryDisplacements, boundaryForces
+
+#### Resolução do problema nos pontos internos
+# D[] e S[]
+def getDandSMatrices(sourcePoints, elementsList, auxiliaryMesh, duplicatedNodes, geometricNodes, integrationPoints, weights, poisson, G):
+    start = timer()
+    
     DMatrix = np.zeros((4 * len(sourcePoints), 2 * len(auxiliaryMesh)))
     SMatrix = np.zeros((4 * len(sourcePoints), 2 * len(auxiliaryMesh)))
-
-    integrationPoints, weights = gauss_legendre(12, 5)
-    poisson = 0
-    G = 1 / (2 * (1 + poisson)) # kN/m2
 
     for sp in range(len(sourcePoints)):
         for el in range(len(elementsList)):
@@ -347,19 +309,45 @@ def getInternalStress(sourcePoints):
                     SMatrix[4*sp + 1][2 * elementsList[el].nodeList[en] + i] += Scontribution[1][2 * en + i]
                     SMatrix[4*sp + 2][2 * elementsList[el].nodeList[en] + i] += Scontribution[2][2 * en + i]
                     SMatrix[4*sp + 3][2 * elementsList[el].nodeList[en] + i] += Scontribution[3][2 * en + i]
-                                
+
+    end = timer()
+    print("    -- Geração das matrizes D e S: ", "%.5f" % (end - start), " segundos.")
+
     return DMatrix, SMatrix
 
-startInternalStress = timer()
-DMatrix, SMatrix = getInternalStress(internalPoints)
-internalStress = np.dot(DMatrix, boundaryForces) - np.dot(SMatrix, boundaryDisplacements)
-endInternalStress = timer()
-print("Tensões dos pontos internos: ", "%.5f" % (endInternalStress - startInternalStress), " segundos.")
-endprocess = timer()
+# Deslocamentos dos pontos internos
+def handleInternalDisplacements(internalPoints, boundaryForces, boundaryDisplacements, auxiliaryMesh, duplicatedNodes, elementsList, geometricNodes, integrationPoints, weights, poisson, G):
+    start = timer()
 
-print("Tempo total: ", "%.5f" % (endprocess - startprocess), " segundos")
+    IntHMatrix, IntGMatrix = getHandGMatrices(internalPoints, auxiliaryMesh, duplicatedNodes, elementsList, geometricNodes, integrationPoints, weights, poisson, G)
+    internalDisplacements = np.dot(IntGMatrix, boundaryForces) - np.dot(IntHMatrix, boundaryDisplacements)
+    
+    end = timer()
+    print("    -- Deslocamentos dos pontos internos: ", "%.5f" % (end - start), " segundos.")
 
-start = timer()
-integrationPoints, weights = gauss_legendre(12, 5)
-end = timer()
-print("%.5f" % (start - end))
+    return internalDisplacements
+
+#Tensões nos pontos internos
+def handleInternalStress(internalPoints, boundaryForces, boundaryDisplacements, elementsList, auxiliaryMesh, duplicatedNodes, geometricNodes, integrationPoints, weights, poisson, G):
+    start = timer()
+
+    DMatrix, SMatrix = getDandSMatrices(internalPoints, elementsList, auxiliaryMesh, duplicatedNodes, geometricNodes, integrationPoints, weights, poisson, G)
+    internalStress = np.dot(DMatrix, boundaryForces) - np.dot(SMatrix, boundaryDisplacements)
+    
+    end = timer()
+    print("    -- Tensões dos pontos internos: ", "%.5f" % (end - start), " segundos.")
+
+    return internalStress
+
+# Resolução do problema para os pontos internos
+def solveInternalPoints(internalPoints, boundaryForces, boundaryDisplacements, auxiliaryMesh, duplicatedNodes, elementsList, geometricNodes, integrationPoints, weights, poisson, G):
+    print("  4 - Resolução do problema no contorno")
+    start = timer()
+
+    internalDisplacements = handleInternalDisplacements(internalPoints, boundaryForces, boundaryDisplacements, auxiliaryMesh, duplicatedNodes, elementsList, geometricNodes, integrationPoints, weights, poisson, G)
+    internalStress = handleInternalStress(internalPoints, boundaryForces, boundaryDisplacements, elementsList, auxiliaryMesh, duplicatedNodes, geometricNodes, integrationPoints, weights, poisson, G)
+
+    end = timer()
+    print("    -- Tempo total: ", "%.5f" % (end - start), " segundos.\n")
+
+    return internalDisplacements, internalStress

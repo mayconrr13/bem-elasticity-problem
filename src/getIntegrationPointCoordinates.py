@@ -1,5 +1,5 @@
 import numpy as np
-from shapeFunctions import *
+from src.shapeFunctions import *
 
 def getIntegrationPointCoordinates(points: float, elementNodes: list, dimensionlessPoints: list):
         elementPointsCoordinates = []

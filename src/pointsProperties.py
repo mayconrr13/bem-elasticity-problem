@@ -1,4 +1,4 @@
-from diffShapeFunction import *
+from src.diffShapeFunction import *
 
 def getPointProperties(point: float, elementNodes: list, adimentionalPoints: list):
     tangentVector = [0, 0]

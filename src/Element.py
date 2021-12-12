@@ -1,5 +1,5 @@
 import numpy as np
-from shapeFunctions import *
+from src.shapeFunctions import *
 
 class Element:
     def __init__(self, nodeList: list):
