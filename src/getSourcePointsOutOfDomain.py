@@ -21,7 +21,3 @@ def getSourcePoints(duplicatedNodes, geometricNodes, elementsList):
                 sourcePointsList.append(sourcePointCoordinates)
 
     return sourcePointsList
-
-# elementList = [Element([0,1,2]), Element([3,4,5])]
-# geometricNodes = [[0,0],[1,0],[2,0],[2,0],[2,1],[2,2]]
-# print(getSourcePoints([2,3], geometricNodes,elementList))

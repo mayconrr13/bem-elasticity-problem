@@ -1,6 +1,6 @@
 import numpy as np
 from src.handleAuxiliaryMesh import handleAuxiliaryMesh
-from src.getHandGMatrices import solveBoundaryProblem, solveInternalPoints
+from src.processSteps import solveBoundaryProblem, solveInternalPoints
 
 def solveElasticityBoundaryProblem(
     prescribedDisplacements: list, 
@@ -9,14 +9,14 @@ def solveElasticityBoundaryProblem(
     geometricNodes: list, 
     internalPoints: list, 
     elements: list,
+     duplicatedNodes: list, 
+     auxiliaryMesh: list,
     numberOfIntegrationPoints: int
 ):
     poisson = material[1]
     G = material[0] / (2 * (1 + poisson))
     integrationPoints, weights = np.polynomial.legendre.leggauss(numberOfIntegrationPoints)
 
-    # Cria malha de colocação
-    duplicatedNodes, auxiliaryMesh = handleAuxiliaryMesh(elements, geometricNodes)
     sourcePoints = auxiliaryMesh
 
     # Resolução do problema    
@@ -24,3 +24,4 @@ def solveElasticityBoundaryProblem(
     internalDisplacements, internalStress = solveInternalPoints(internalPoints, boundaryForces, boundaryDisplacements, auxiliaryMesh, duplicatedNodes, elements, geometricNodes, integrationPoints, weights, poisson, G)
 
     return boundaryDisplacements, boundaryForces, internalDisplacements, internalStress
+    

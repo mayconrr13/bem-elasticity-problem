@@ -75,7 +75,4 @@ class Element:
 
     def __str__(self):
         return str(self.__class__) + ": " + str(self.__dict__)
-
-# element1 = Element([3,4,5])
-# nodeList = [[0,0], [1,0],[2,0],[2,0],[2,1],[2,2]]
-# element1.getAuxiliaryNodesCoordinates([2,3], nodeList)
+        

@@ -7,7 +7,7 @@ from src.pointsProperties import getPointProperties
 from src.shapeFunctions import getShapeFunctionValueOnNode
 from src.auxiliaryFunctions import * 
 
-dirac = [[1,0],[0,1]]
+kronecker = [[1,0],[0,1]]
 
 #### Resolução do problema no contorno
 # H[] e G[]
@@ -107,8 +107,8 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
                 for i in range(2):
                     for j in range(2):
                         # remover o termo final de U
-                        U[i,j] += (1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(radius) * dirac[i][j] + radiusDiff[i] * radiusDiff[j] - (0.5 * (7 - 8 * poisson)) * dirac[i][j])
-                        P[i,j] += (-1 / (4 * math.pi * (1 - poisson) * radius)) * (DRDN * ((1 - 2 * poisson) * dirac[i][j] + 2 * radiusDiff[i] * radiusDiff[j]) + (1 - 2 * poisson) * (normalVector[i] * radiusDiff[j] - normalVector[j] * radiusDiff[i]))
+                        U[i,j] += (1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(radius) * kronecker[i][j] + radiusDiff[i] * radiusDiff[j] - (0.5 * (7 - 8 * poisson)) * kronecker[i][j])
+                        P[i,j] += (-1 / (4 * math.pi * (1 - poisson) * radius)) * (DRDN * ((1 - 2 * poisson) * kronecker[i][j] + 2 * radiusDiff[i] * radiusDiff[j]) + (1 - 2 * poisson) * (normalVector[i] * radiusDiff[j] - normalVector[j] * radiusDiff[i]))
                         
                         
                         # contribuir com parcela de regularização
@@ -118,7 +118,7 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
                             sourceTangentVector, sourceNormalVector, sourceJacobain = getPointProperties(auxiliaryDimensionlessPoints[nodeIndex], elementNodes, dimensionlessPoints)
                             radiusDotDiff = [sourceTangentVector[0] / sourceJacobain, sourceTangentVector[1] / sourceJacobain]
                             
-                            _U[i,j] += (-1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(abs(radiusDot)) * dirac[i][j])
+                            _U[i,j] += (-1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(abs(radiusDot)) * kronecker[i][j])
                             _P[i,j] += (1 / (4 * math.pi * (1 - poisson) * radiusDot)) * (1 - 2 * poisson) * (sourceNormalVector[i] * radiusDotDiff[j] - sourceNormalVector[j] * radiusDotDiff[i])
 
                 fi = np.zeros((2, 2 * len(elementNodes))) 
@@ -253,37 +253,37 @@ def getDandSMatrices(sourcePoints, elementsList, auxiliaryMesh, duplicatedNodes,
 
                 # preenchimento das matrizes D e S
                 for k in range(2):
-                    D[0, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (dirac[k][0] * radiusDiff[0] + dirac[k][0] * radiusDiff[0] - dirac[0][0] * radiusDiff[k]) + 2 * radiusDiff[0] * radiusDiff[0] * radiusDiff[k]) #i=0 e j=0
-                    D[1, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (dirac[k][0] * radiusDiff[1] + dirac[k][1] * radiusDiff[0] - dirac[0][1] * radiusDiff[k]) + 2 * radiusDiff[0] * radiusDiff[1] * radiusDiff[k]) #i=0 e j=1
-                    D[2, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (dirac[k][1] * radiusDiff[0] + dirac[k][0] * radiusDiff[1] - dirac[1][0] * radiusDiff[k]) + 2 * radiusDiff[1] * radiusDiff[0] * radiusDiff[k]) #i=1 e j=0
-                    D[3, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (dirac[k][1] * radiusDiff[1] + dirac[k][1] * radiusDiff[1] - dirac[1][1] * radiusDiff[k]) + 2 * radiusDiff[1] * radiusDiff[1] * radiusDiff[k]) #i=1 e j=1
+                    D[0, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (kronecker[k][0] * radiusDiff[0] + kronecker[k][0] * radiusDiff[0] - kronecker[0][0] * radiusDiff[k]) + 2 * radiusDiff[0] * radiusDiff[0] * radiusDiff[k]) #i=0 e j=0
+                    D[1, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (kronecker[k][0] * radiusDiff[1] + kronecker[k][1] * radiusDiff[0] - kronecker[0][1] * radiusDiff[k]) + 2 * radiusDiff[0] * radiusDiff[1] * radiusDiff[k]) #i=0 e j=1
+                    D[2, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (kronecker[k][1] * radiusDiff[0] + kronecker[k][0] * radiusDiff[1] - kronecker[1][0] * radiusDiff[k]) + 2 * radiusDiff[1] * radiusDiff[0] * radiusDiff[k]) #i=1 e j=0
+                    D[3, k] += (1 / (4 * math.pi * (1 - poisson) * radius)) * ((1 - 2 * poisson) * (kronecker[k][1] * radiusDiff[1] + kronecker[k][1] * radiusDiff[1] - kronecker[1][1] * radiusDiff[k]) + 2 * radiusDiff[1] * radiusDiff[1] * radiusDiff[k]) #i=1 e j=1
 
                     # k0, i0, j0
-                    partial1S0 = 2 * DRDN * ((1 - 2 * poisson) * dirac[0][0] * radiusDiff[k] + poisson * (dirac[0][k] * radiusDiff[0] + dirac[0][k] * radiusDiff[0]) - 4 * radiusDiff[0] * radiusDiff[0] * radiusDiff[k])
+                    partial1S0 = 2 * DRDN * ((1 - 2 * poisson) * kronecker[0][0] * radiusDiff[k] + poisson * (kronecker[0][k] * radiusDiff[0] + kronecker[0][k] * radiusDiff[0]) - 4 * radiusDiff[0] * radiusDiff[0] * radiusDiff[k])
                     partial2S0 = 2 * poisson * (normalVector[0] * radiusDiff[0] * radiusDiff[k] + normalVector[0] * radiusDiff[0] * radiusDiff[k])
-                    partial3S0 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[0] * radiusDiff[0] + normalVector[0] * dirac[0][k] + normalVector[0] * dirac[0][k])
-                    partial4S0 = (- 1 + 4 * poisson) * normalVector[k] * dirac[0][0] 
+                    partial3S0 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[0] * radiusDiff[0] + normalVector[0] * kronecker[0][k] + normalVector[0] * kronecker[0][k])
+                    partial4S0 = (- 1 + 4 * poisson) * normalVector[k] * kronecker[0][0] 
                     S[0, k] += (G / (2 * math.pi * (1 - poisson) * radius * radius)) * (partial1S0 + partial2S0 + partial3S0 + partial4S0)
 
                     # k0, i0, j1
-                    partial1S1 = 2 * DRDN * ((1 - 2 * poisson) * dirac[0][1] * radiusDiff[k] + poisson * (dirac[0][k] * radiusDiff[1] + dirac[1][k] * radiusDiff[0]) - 4 * radiusDiff[0] * radiusDiff[1] * radiusDiff[k])
+                    partial1S1 = 2 * DRDN * ((1 - 2 * poisson) * kronecker[0][1] * radiusDiff[k] + poisson * (kronecker[0][k] * radiusDiff[1] + kronecker[1][k] * radiusDiff[0]) - 4 * radiusDiff[0] * radiusDiff[1] * radiusDiff[k])
                     partial2S1 = 2 * poisson * (normalVector[0] * radiusDiff[1] * radiusDiff[k] + normalVector[1] * radiusDiff[0] * radiusDiff[k])
-                    partial3S1 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[0] * radiusDiff[1] + normalVector[1] * dirac[0][k] + normalVector[0] * dirac[1][k])
-                    partial4S1 = (- 1 + 4 * poisson) * normalVector[k] * dirac[0][1] 
+                    partial3S1 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[0] * radiusDiff[1] + normalVector[1] * kronecker[0][k] + normalVector[0] * kronecker[1][k])
+                    partial4S1 = (- 1 + 4 * poisson) * normalVector[k] * kronecker[0][1] 
                     S[1, k] += (G / (2 * math.pi * (1 - poisson) * radius * radius)) * (partial1S1 + partial2S1 + partial3S1 + partial4S1)
 
                     # k0, i1, j0
-                    partial1S2 = 2 * DRDN * ((1 - 2 * poisson) * dirac[1][0] * radiusDiff[k] + poisson * (dirac[1][k] * radiusDiff[0] + dirac[0][k] * radiusDiff[1]) - 4 * radiusDiff[1] * radiusDiff[0] * radiusDiff[k])
+                    partial1S2 = 2 * DRDN * ((1 - 2 * poisson) * kronecker[1][0] * radiusDiff[k] + poisson * (kronecker[1][k] * radiusDiff[0] + kronecker[0][k] * radiusDiff[1]) - 4 * radiusDiff[1] * radiusDiff[0] * radiusDiff[k])
                     partial2S2 = 2 * poisson * (normalVector[1] * radiusDiff[0] * radiusDiff[k] + normalVector[0] * radiusDiff[1] * radiusDiff[k])
-                    partial3S2 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[1] * radiusDiff[0] + normalVector[0] * dirac[1][k] + normalVector[1] * dirac[0][k])
-                    partial4S2 = (- 1 + 4 * poisson) * normalVector[k] * dirac[1][0] 
+                    partial3S2 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[1] * radiusDiff[0] + normalVector[0] * kronecker[1][k] + normalVector[1] * kronecker[0][k])
+                    partial4S2 = (- 1 + 4 * poisson) * normalVector[k] * kronecker[1][0] 
                     S[2, k] += (G / (2 * math.pi * (1 - poisson) * radius * radius)) * (partial1S2 + partial2S2 + partial3S2 + partial4S2)
 
                     # k0, i1, j1
-                    partial1S3 = 2 * DRDN * ((1 - 2 * poisson) * dirac[1][0] * radiusDiff[k] + poisson * (dirac[1][k] * radiusDiff[1] + dirac[1][k] * radiusDiff[1]) - 4 * radiusDiff[1] * radiusDiff[1] * radiusDiff[k])
+                    partial1S3 = 2 * DRDN * ((1 - 2 * poisson) * kronecker[1][0] * radiusDiff[k] + poisson * (kronecker[1][k] * radiusDiff[1] + kronecker[1][k] * radiusDiff[1]) - 4 * radiusDiff[1] * radiusDiff[1] * radiusDiff[k])
                     partial2S3 = 2 * poisson * (normalVector[1] * radiusDiff[1] * radiusDiff[k] + normalVector[1] * radiusDiff[1] * radiusDiff[k])
-                    partial3S3 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[1] * radiusDiff[1] + normalVector[1] * dirac[1][k] + normalVector[1] * dirac[1][k])
-                    partial4S3 = (- 1 + 4 * poisson) * normalVector[k] * dirac[1][1] 
+                    partial3S3 = (1 - 2 * poisson) * (2 * normalVector[k] * radiusDiff[1] * radiusDiff[1] + normalVector[1] * kronecker[1][k] + normalVector[1] * kronecker[1][k])
+                    partial4S3 = (- 1 + 4 * poisson) * normalVector[k] * kronecker[1][1] 
                     S[3, k] += (G / (2 * math.pi * (1 - poisson) * radius * radius)) * (partial1S3 + partial2S3 + partial3S3 + partial4S3)
                 
                 fi = np.zeros((2, 2 * len(elementNodes))) 

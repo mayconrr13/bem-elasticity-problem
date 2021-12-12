@@ -14,6 +14,3 @@ def getPointProperties(point: float, elementNodes: list, adimentionalPoints: lis
     normalVector[1] = - tangentVector[0] / jacobian
 
     return tangentVector, normalVector, jacobian
-
-# teste = getPointProperties(1, [[0,0], [1,1], [2,2]], [-1,0,1])
-# print(teste)

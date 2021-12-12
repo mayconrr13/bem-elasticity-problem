@@ -100,5 +100,3 @@ def readInputFile(file: str):
     print("  1 - Leitura de dados: ", "%.5f" % (end - start), " segundos.\n")
 
     return prescribedDisplacements, prescribedForces, material, geometricNodes, internalPoints, elements
-
-# prescribedDisplacements, prescribedForces, material, geometricNodes, internalPoints, elements = readInputFile("src/ex1_inputFileEP.txt")

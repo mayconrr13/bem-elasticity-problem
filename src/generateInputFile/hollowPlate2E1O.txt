@@ -47,15 +47,15 @@ element, x, y
 Displacements 
 - - - - - - - - - - - - - - - -
 element, dispX, dispY
-6, 0, 0
-7, 0, 0
+2, 0, 0
+3, 0, 0
 
 - - - - - - - - - - - - - - - -
 Forces 
 - - - - - - - - - - - - - - - -
 element, dispX, dispY
-2, 1, 0
-3, 1, 0
+6, 1, 0
+7, 1, 0
 
 - - - - - - - - -
 Materials

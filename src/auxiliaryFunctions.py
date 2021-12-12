@@ -1,5 +1,5 @@
 # Retorna o rário e seus componentes tomando dois pontos como referência (final e inicial)
-def getRadius(sourcePoint: list, integrationPointCoordinates: list):
+def getRadius(sourcePoint, integrationPointCoordinates):
 
     xComponent = integrationPointCoordinates[0] - sourcePoint[0]
     yComponent = integrationPointCoordinates[1] - sourcePoint[1]
