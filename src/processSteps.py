@@ -88,14 +88,12 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
                 # print("Pvpc: ", forceCPV)
                 displacementCPVContribution = np.dot(displacementCPV, fi_)  
                 forceCPVContribution = np.dot(forceCPV, fi_)
-                                    
-                        
-            for ip in range(len(integrationPoints)):           
+                                             
+            for ip in range(len(integrationPoints)):
                 integrationPointsRealCoordinates = getIntegrationPointCoordinates(integrationPoints[ip], elementNodes, dimensionlessPoints)
-
                 integrationPointRadius = getRadius(sourcePoints[sp], integrationPointsRealCoordinates)
-                radius = integrationPointRadius[1]
-                radiusDiff = [integrationPointRadius[0][0] / integrationPointRadius[1], integrationPointRadius[0][1] / integrationPointRadius[1]]
+                radius = integrationPointRadius[1]         
+                radiusDiff = [integrationPointRadius[0][0] / radius, integrationPointRadius[0][1] / radius]
 
                 _, normalVector, jacobian = getPointProperties(ip, elementNodes, dimensionlessPoints)
                 
@@ -140,7 +138,7 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
                 
                 DH = DH + np.dot(P, fi) * jacobian * weights[ip] + np.dot(_P, _fi) * jacobian * weights[ip]
                 DG = DG + np.dot(U, fi) * jacobian * weights[ip] + np.dot(_U, _fi) * jacobian * weights[ip]
-            
+                            
             # colocar DH e DG na matriz global
             for en in range(len(elementNodes)):
                 for i in range(2):
@@ -153,6 +151,8 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
     end = timer()
     print("    -- Geração das matrizes H e G: ", "%.5f" % (end - start), " segundos.")     
 
+    print(HMatrix)
+    print(GMatrix)
     return HMatrix, GMatrix
 
 # Aplicação da condições de contorno
@@ -211,7 +211,7 @@ def handleResultantVectors(resultsVector, FVector, prescribedU):
 def solveBoundaryProblem(sourcePoints: list, prescribedU: list, prescribedP: list, auxiliaryMesh: list, duplicatedNodes: list, elementsList: list, geometricNodes: list, integrationPoints: list, weights: list, poisson: float, G: float):
     print("  3 - Resolução do problema no contorno")
     start = timer()
-    print(sourcePoints)
+    
     HMatrix, GMatrix = getHandGMatrices(sourcePoints, auxiliaryMesh, duplicatedNodes, elementsList, geometricNodes, integrationPoints, weights, poisson, G)
     FHMatrix, FGMatrix, FVector = applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePoints)
     resultsVector = np.linalg.solve(FHMatrix, np.dot(FGMatrix, FVector))

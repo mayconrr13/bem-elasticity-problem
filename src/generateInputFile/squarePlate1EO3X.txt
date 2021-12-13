@@ -1,0 +1,46 @@
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Boundary Element Method - Elasticity Problem
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+numberOfExternalNodes: 4
+numberOfInternalNodes: 0
+nodesPerElement: 4
+numberOfElements: 1
+displacements: 0
+forces: 0
+
+- - - - - - - - -
+Nodes coordinates
+- - - - - - - - -
+node, x, y
+0, 0, 0
+1, 0.333, 0
+2, 0.666, 0
+3, 1, 0
+
+- - - - - - - - - - - - - - 
+Internal points coordinates
+- - - - - - - - - - - - - - 
+node, x, y
+
+- - - - - - - -
+Elements nodes 
+- - - - - - - -
+element, x, y
+0, 0, 1, 2, 3
+
+- - - - - - - - - - - - - - - -
+Displacements 
+- - - - - - - - - - - - - - - -
+element, dispX, dispY
+
+- - - - - - - - - - - - - - - -
+Forces 
+- - - - - - - - - - - - - - - -
+element, dispX, dispY
+
+- - - - - - - - -
+Materials
+- - - - - - - - -
+youngModulus, poisson
+1, 0

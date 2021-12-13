@@ -3,45 +3,27 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def generateHollowCylinder():
-    elementsOrder = 3
+    elementsOrder = 1
     elementsOnLine = 3
-    elementsOnCurve = 10
 
-    width = 1 #mm
-    height = 1 #mm
+    elementSize = 10
 
-    Fy = 2
-    E = 1 #N/mm2
-    poisson = 0
+    l1Size = 100
+    l2Size = 400
+    l3Size = 400
+    l4Size = 100
+    l5Size = 500
+    l6Size = 500
 
     # NODES
     nodes = []
 
-    # horizontalLine bottom
-    HLBelementsSize =  width / elementsOnLine
-    for i in range((elementsOnLine ) * elementsOrder + 1):
+    
+    # l1
+    for i in range(elementSize + 1):
         node = [0, 0]
 
-        node[0] = (i * HLBelementsSize) / elementsOrder
-
-        nodes.append(node)
-
-    # vertical line right
-    VLRelementsSize =  height / elementsOnLine
-    for i in range((elementsOnLine ) * elementsOrder + 1):
-        node = [0, 0]
-
-        node[0] = width
-        node[1] = (i * VLRelementsSize) / elementsOrder
-
-        nodes.append(node)
-
-    # horizontalLine top
-    HLTelementsSize =  width / elementsOnLine
-    for i in range((elementsOnLine) * elementsOrder + 1):
-        node = [0, 0]
-
-        node[0] = width - (i * HLTelementsSize) / elementsOrder
+        node[0] = 
         node[1] = height
 
         nodes.append(node)

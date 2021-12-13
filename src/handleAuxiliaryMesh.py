@@ -24,7 +24,7 @@ def generateAuxiliaryMesh(elementsList: list, duplicatedNodes: list, geometricNo
         for j in range(len(elementAuxiliaryCoordinates)):
             if elementAuxiliaryCoordinates[j] not in auxiliaryMesh:
                 auxiliaryMesh.append(elementAuxiliaryCoordinates[j])
-
+                
     return auxiliaryMesh
 
 def handleAuxiliaryMesh(elements: list, geometricNodes: list):

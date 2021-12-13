@@ -10,15 +10,16 @@ def solveElasticityBoundaryProblem(
     geometricNodes: list, 
     internalPoints: list, 
     elements: list,
-     duplicatedNodes: list, 
-     auxiliaryMesh: list,
+    duplicatedNodes: list, 
+    auxiliaryMesh: list,
     numberOfIntegrationPoints: int
 ):
     poisson = material[1]
     G = material[0] / (2 * (1 + poisson))
     integrationPoints, weights = np.polynomial.legendre.leggauss(numberOfIntegrationPoints)
 
-    sourcePoints = getSourcePoints(duplicatedNodes, geometricNodes, elements)
+    # sourcePoints = getSourcePoints(duplicatedNodes, geometricNodes, elements)
+    sourcePoints = auxiliaryMesh
 
     # Resolução do problema    
     boundaryDisplacements, boundaryForces = solveBoundaryProblem(sourcePoints, prescribedDisplacements, prescribedForces, auxiliaryMesh, duplicatedNodes, elements, geometricNodes, integrationPoints, weights, poisson, G)

@@ -1,0 +1,77 @@
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Boundary Element Method - Elasticity Problem
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+numberOfExternalNodes: 16
+numberOfInternalNodes: 0
+nodesPerElement: 2
+numberOfElements: 12
+displacements: 4
+forces: 4
+
+- - - - - - - - -
+Nodes coordinates
+- - - - - - - - -
+node, x, y
+0, 0, 0
+1, 0.333, 0
+2, 0.666, 0
+3, 1, 0
+4, 1, 0
+5, 1, 0.333
+6, 1, 0.666
+7, 1, 1
+8, 1, 1
+9, 0.666, 1
+10, 0.333, 1
+11, 0, 1
+12, 0, 1
+13, 0, 0.666
+14, 0, 0.333
+15, 0, 0
+
+- - - - - - - - - - - - - - 
+Internal points coordinates
+- - - - - - - - - - - - - - 
+node, x, y
+
+- - - - - - - -
+Elements nodes 
+- - - - - - - -
+element, x, y
+0, 0, 1
+1, 1, 2
+2, 2, 3
+3, 4, 5
+4, 5, 6
+5, 6, 7
+6, 8, 9
+7, 9, 10
+8, 10, 11
+9, 12, 13
+10, 13, 14
+11, 14, 15
+
+- - - - - - - - - - - - - - - -
+Displacements 
+- - - - - - - - - - - - - - - -
+element, dispX, dispY
+12, 0, 0
+13, 0, 0
+14, 0, 0
+15, 0, 0
+
+- - - - - - - - - - - - - - - -
+Forces 
+- - - - - - - - - - - - - - - -
+element, dispX, dispY
+4, 1, 0
+5, 1, 0
+6, 1, 0
+7, 1, 0
+
+- - - - - - - - -
+Materials
+- - - - - - - - -
+youngModulus, poisson
+1, 0
