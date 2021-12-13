@@ -84,16 +84,8 @@ def createParaviewFile(boundaryDisplacements, internalDisplacements, internalStr
     end = timer()
     print("  5 - Arquivo de saída para Paraview: ", "%.5f" % (end - start), " segundos.\n")
     return
-
-#     write(11,'(a)') '      <DataArray type="Float64" NumberOfComponents="1" Name="SigmaX" format="ascii">'
-#     do i = 1,nnos
-#         write(11,'(es12.5)') tensao(i,1)
-#     end do
-#     write(11,'(a)') '      </DataArray>'
  
 def auxmesh(auxmesh, elements):
-    start = timer()
-
     outputFile = open('results0.vtu', 'a')
 
     outputFile.write('<?xml version="1.0"?>\n<VTKFile type="UnstructuredGrid">\n  <UnstructuredGrid>\n  <Piece NumberOfPoints="' + str(len(auxmesh)) + '" NumberOfCells="' + str(len(elements)) + '">\n')
@@ -109,8 +101,8 @@ def auxmesh(auxmesh, elements):
     # elementos
     outputFile.write('    <Cells>\n      <DataArray type="Int32" Name="connectivity" format="ascii">\n')
     for i in range(len(elements)):
-        nodeList = elements[i].nodeList                
-        outputFile.write(str(4 * i) + ' ' + str(4 * i + 1) + ' ' + str(4 * i + 2) + ' ' + str(4 * i + 3) + '\n')    
+        nodeList = elements[i].nodeList               
+        outputFile.write(str(nodeList[0]) + ' ' + str(nodeList[1]) + '\n')    
     outputFile.write('      </DataArray>\n')
     
     outputFile.write('      <DataArray type="Int32" Name="offsets" format="ascii">\n')
@@ -137,7 +129,4 @@ def auxmesh(auxmesh, elements):
     outputFile.write('  </Piece>\n  </UnstructuredGrid>\n</VTKFile>')
     
     outputFile.close()
-
-    end = timer()
-    print("  5 - Arquivo de saída para Paraview: ", "%.5f" % (end - start), " segundos.\n")
     return

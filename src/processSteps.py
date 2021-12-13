@@ -185,6 +185,8 @@ def applyBoundaryConditions(HMatrix, GMatrix, prescribedU, prescribedP, sourcePo
     
     return FHMatrix, FGMatrix, FVector
 
+  
+
 # criação do vertor de forças de superfície e de deslocamento no contorno
 def handleResultantVectors(resultsVector, FVector, prescribedU):
     start = timer()

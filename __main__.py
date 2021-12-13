@@ -17,7 +17,7 @@ def elasticityProblemBEM(file: str):
 
     # Cria malha de colocação
     duplicatedNodes, auxiliaryMesh = handleAuxiliaryMesh(elements, geometricNodes)
-    # auxmesh(auxiliaryMesh, elements)
+    auxmesh(auxiliaryMesh, elements)
 
     # Resolução do problema de elasticidade por MEC   
     (
@@ -34,7 +34,7 @@ def elasticityProblemBEM(file: str):
         elements, 
         duplicatedNodes, 
         auxiliaryMesh,
-        60
+        12
     )
 
     # Criação do arquivo de saíde em Paraview
@@ -45,4 +45,4 @@ def elasticityProblemBEM(file: str):
 
     return
 
-elasticityProblemBEM("src/generateInputFile/squarePlate2EO1.txt")
+elasticityProblemBEM("src/generateInputFile/squarePlate3EO1.txt")
