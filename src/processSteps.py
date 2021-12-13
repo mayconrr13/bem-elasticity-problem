@@ -107,10 +107,9 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
                 for i in range(2):
                     for j in range(2):
                         # remover o termo final de U
-                        U[i,j] += (1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(radius) * kronecker[i][j] + radiusDiff[i] * radiusDiff[j] - (0.5 * (7 - 8 * poisson)) * kronecker[i][j])
-                        P[i,j] += (-1 / (4 * math.pi * (1 - poisson) * radius)) * (DRDN * ((1 - 2 * poisson) * kronecker[i][j] + 2 * radiusDiff[i] * radiusDiff[j]) + (1 - 2 * poisson) * (normalVector[i] * radiusDiff[j] - normalVector[j] * radiusDiff[i]))
-                        
-                        
+                        U[i,j] = (1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(radius) * kronecker[i][j] + radiusDiff[i] * radiusDiff[j] - (0.5 * (7 - 8 * poisson)) * kronecker[i][j])
+                        P[i,j] = (-1 / (4 * math.pi * (1 - poisson) * radius)) * (DRDN * ((1 - 2 * poisson) * kronecker[i][j] + 2 * radiusDiff[i] * radiusDiff[j]) + (1 - 2 * poisson) * (normalVector[i] * radiusDiff[j] - normalVector[j] * radiusDiff[i]))
+                                                
                         # contribuir com parcela de regularização
                         if sourcePointIsOnElement:                            
                             radiusDot = jacobian * (integrationPoints[ip] - auxiliaryDimensionlessPoints[nodeIndex])
@@ -118,8 +117,8 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
                             sourceTangentVector, sourceNormalVector, sourceJacobain = getPointProperties(auxiliaryDimensionlessPoints[nodeIndex], elementNodes, dimensionlessPoints)
                             radiusDotDiff = [sourceTangentVector[0] / sourceJacobain, sourceTangentVector[1] / sourceJacobain]
                             
-                            _U[i,j] += (-1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(abs(radiusDot)) * kronecker[i][j])
-                            _P[i,j] += (1 / (4 * math.pi * (1 - poisson) * radiusDot)) * (1 - 2 * poisson) * (sourceNormalVector[i] * radiusDotDiff[j] - sourceNormalVector[j] * radiusDotDiff[i])
+                            _U[i,j] = (-1 / (8 * math.pi * G * (1 - poisson))) * ((- 3 + 4 * poisson) * math.log(abs(radiusDot)) * kronecker[i][j])
+                            _P[i,j] = (1 / (4 * math.pi * (1 - poisson) * radiusDot)) * (1 - 2 * poisson) * (sourceNormalVector[i] * radiusDotDiff[j] - sourceNormalVector[j] * radiusDotDiff[i])
 
                 fi = np.zeros((2, 2 * len(elementNodes))) 
                 _fi = np.zeros((2, 2 * len(elementNodes))) 
@@ -138,7 +137,7 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
                 
                 DH = DH + np.dot(P, fi) * jacobian * weights[ip] + np.dot(_P, _fi) * jacobian * weights[ip]
                 DG = DG + np.dot(U, fi) * jacobian * weights[ip] + np.dot(_U, _fi) * jacobian * weights[ip]
-                            
+                
             # colocar DH e DG na matriz global
             for en in range(len(elementNodes)):
                 for i in range(2):
@@ -151,8 +150,8 @@ def getHandGMatrices(sourcePoints: list, auxiliaryMesh: list, duplicatedNodes: l
     end = timer()
     print("    -- Geração das matrizes H e G: ", "%.5f" % (end - start), " segundos.")     
 
-    print(HMatrix)
-    print(GMatrix)
+    # print(HMatrix)
+    # print(GMatrix)
     return HMatrix, GMatrix
 
 # Aplicação da condições de contorno

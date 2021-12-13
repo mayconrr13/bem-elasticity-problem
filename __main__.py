@@ -3,7 +3,6 @@ from src.readInputFile import readInputFile
 from src.handleAuxiliaryMesh import handleAuxiliaryMesh
 from src.solveElasticityBoundaryProblem import solveElasticityBoundaryProblem
 from src.createParaviewFile import auxmesh, createParaviewFile
-import matplotlib.pyplot as plt
 
 def elasticityProblemBEM(file: str):
     print("Início do processo")
@@ -35,7 +34,7 @@ def elasticityProblemBEM(file: str):
         elements, 
         duplicatedNodes, 
         auxiliaryMesh,
-        40
+        60
     )
 
     # Criação do arquivo de saíde em Paraview
@@ -46,4 +45,4 @@ def elasticityProblemBEM(file: str):
 
     return
 
-elasticityProblemBEM("src/generateInputFile/squarePlate3EO1.txt")
+elasticityProblemBEM("src/generateInputFile/squarePlate2EO1.txt")

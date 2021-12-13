@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<VTKFile type="UnstructuredGrid">
+  <UnstructuredGrid>
+  <Piece NumberOfPoints="15" NumberOfCells="11">
+    <Points>
+      <DataArray type="Float64" NumberOfComponents="3" format="ascii">
+0.50000 0.00000 0
+1.50000 0.00000 0
+2.00000 0.25000 0
+2.00000 0.75000 0
+1.50000 1.00000 0
+0.50000 1.00000 0
+0.00000 0.75000 0
+0.00000 0.25000 0
+1.00000 0.50000 0
+0.50000 0.25000 0
+1.50000 0.75000 0
+0.50000 0.50000 0
+0.50000 0.75000 0
+1.50000 0.50000 0
+1.50000 0.25000 0
+      </DataArray>
+    </Points>
+    <Cells>
+      <DataArray type="Int32" Name="connectivity" format="ascii">
+0 1
+2 3
+4 5
+6 7
+8
+9
+10
+11
+12
+13
+14
+      </DataArray>
+      <DataArray type="Int32" Name="offsets" format="ascii">
+2
+4
+6
+8
+9
+10
+11
+12
+13
+14
+15
+      </DataArray>
+      <DataArray type="UInt8" Name="types" format="ascii">
+68
+68
+68
+68
+1
+1
+1
+1
+1
+1
+1
+      </DataArray>
+    </Cells>
+    <PointData>
+      <DataArray type="Float64" NumberOfComponents="2" Name="Displacements" format="ascii">
+0.25000 0.00000
+0.75000 0.00000
+1.00000 0.00000
+1.00000 -0.00000
+0.75000 0.00000
+0.25000 -0.00000
+0.00000 0.00000
+0.00000 0.00000
+0.50000 0.00000
+0.25000 0.00000
+0.75000 -0.00000
+0.25000 0.00000
+0.25000 -0.00000
+0.75000 0.00000
+0.75000 0.00000
+      </DataArray>
+      <DataArray type="Float64" NumberOfComponents="4" Name="Stress" format="ascii">
+0 0 0 0
+0 0 0 0
+0 0 0 0
+0 0 0 0
+0 0 0 0
+0 0 0 0
+0 0 0 0
+0 0 0 0
+1.00000 0.00000 0.00000 0.50000
+1.00000 -0.00000 -0.00000 0.36747
+1.00000 -0.00000 -0.00000 0.89758
+1.00000 0.00000 0.00000 0.35499
+1.00000 0.00000 0.00000 0.36747
+1.00000 0.00000 0.00000 0.93504
+1.00000 0.00000 0.00000 0.89758
+      </DataArray>
+    </PointData>
+  </Piece>
+  </UnstructuredGrid>
+</VTKFile>
